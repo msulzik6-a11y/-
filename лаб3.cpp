@@ -60,7 +60,7 @@ int main() {
         return 1;
     }
 
-    // Выделяем память ровно под n*(n+1)/2 элементов вместо n*n
+
     int totalElements = n * (n + 1) / 2;
     int* data = new int[totalElements];
 
@@ -82,7 +82,7 @@ int main() {
         cout << endl;
     }
 
-    // Подсчет локальных минимумов
+
     int localMinCount = 0;
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
@@ -92,7 +92,7 @@ int main() {
         }
     }
 
-    // Сумма модулей элементов строго выше главной диагонали
+ 
     long long sumAboveMainDiag = 0;
     for (int i = 0; i < n; ++i) {
         for (int j = i + 1; j < n; ++j) {
@@ -104,7 +104,6 @@ int main() {
     cout << "Сумма модулей элементов выше главной диагонали (не включая диагональ): " 
          << sumAboveMainDiag << endl;
 
-    // Освобождение сжатого массива
     delete[] data;
 
     return 0;
