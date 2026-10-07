@@ -1,21 +1,41 @@
 #include <iostream>
 #include <cmath>
-#include <climits>
+#include <clocale>
 using namespace std;
 
-int getElement(int** a, int n, int i, int j) {
-    return a[i][j];
+int getStorageIndex(int i, int j, int n) {
+    int r = i;
+    int c = j;
+
+    if (r + c > n - 1) {
+        r = n - 1 - j;
+        c = n - 1 - i;
+    }
+
+    int offset = r * n - (r * (r - 1)) / 2;
+    return offset + (c - r);
 }
 
-bool isLocalMinimum(int** a, int n, int i, int j) {
-    int val = getElement(a, n, i, j);
+
+int getElement(const int* data, int n, int i, int j) {
+    return data[getStorageIndex(i, j, n)];
+}
+
+void setElement(int* data, int n, int i, int j, int val) {
+    data[getStorageIndex(i, j, n)] = val;
+}
+
+
+
+bool isLocalMinimum(const int* data, int n, int i, int j) {
+    int val = getElement(data, n, i, j);
     for (int di = -1; di <= 1; ++di) {
         for (int dj = -1; dj <= 1; ++dj) {
             if (di == 0 && dj == 0) continue;
             int ni = i + di;
             int nj = j + dj;
             if (ni >= 0 && ni < n && nj >= 0 && nj < n) {
-                if (getElement(a, n, ni, nj) <= val) {
+                if (getElement(data, n, ni, nj) <= val) {
                     return false;
                 }
             }
@@ -40,67 +60,52 @@ int main() {
         return 1;
     }
 
-    int** a = new int*[n];
-    for (int i = 0; i < n; ++i) {
-        a[i] = new int[n];
-    }
+    // Выделяем память ровно под n*(n+1)/2 элементов вместо n*n
+    int totalElements = n * (n + 1) / 2;
+    int* data = new int[totalElements];
 
-    cout << "Введите элементы матрицы." << endl;
+    cout << "Введите уникальные элементы матрицы (побочная диагональ и выше неё):" << endl;
     for (int i = 0; i < n; ++i) {
-        for (int j = 0; j < n; ++j) {
-            int si = n - j - 1;
-            int sj = n - i - 1;
-            if (si < i || (si == i && sj < j)) {
-                continue;
-            }
+        for (int j = 0; j < n - i; ++j) {
             cout << "a[" << i << "][" << j << "] = ";
-            cin >> a[i][j];
-            if (si != i || sj != j) {
-                a[si][sj] = a[i][j];
-            }
+            int val;
+            cin >> val;
+            setElement(data, n, i, j, val);
         }
     }
 
-    cout << "Введённая матрица:" << endl;
+    cout << "\nВведённая матрица (с восстановленной симметрией):" << endl;
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
-            cout << a[i][j] << "\t";
+            cout << getElement(data, n, i, j) << "\t";
         }
         cout << endl;
     }
 
+    // Подсчет локальных минимумов
     int localMinCount = 0;
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < n; ++j) {
-            int si = n - j - 1;
-            int sj = n - i - 1;
-            if (si < i || (si == i && sj < j)) {
-                continue;
-            }
-            if (isLocalMinimum(a, n, i, j)) {
+            if (isLocalMinimum(data, n, i, j)) {
                 localMinCount++;
-                if (si != i || sj != j) {
-                    localMinCount++;
-                }
             }
         }
     }
 
+    // Сумма модулей элементов строго выше главной диагонали
     long long sumAboveMainDiag = 0;
     for (int i = 0; i < n; ++i) {
         for (int j = i + 1; j < n; ++j) {
-            sumAboveMainDiag += abs(a[i][j]);
+            sumAboveMainDiag += abs(getElement(data, n, i, j));
         }
     }
 
-    cout << "Число локальных минимумов: " << localMinCount << endl;
+    cout << "\nЧисло локальных минимумов: " << localMinCount << endl;
     cout << "Сумма модулей элементов выше главной диагонали (не включая диагональ): " 
          << sumAboveMainDiag << endl;
 
-    for (int i = 0; i < n; ++i) {
-        delete[] a[i];
-    }
-    delete[] a;
+    // Освобождение сжатого массива
+    delete[] data;
 
     return 0;
 }
